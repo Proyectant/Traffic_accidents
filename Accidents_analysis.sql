@@ -98,15 +98,33 @@ FROM accidents
 temp2 AS(
 SELECT 
 		is_weekend_day AS Weekpart,
-		SUM(acc_by_day) OVER (PARTITION BY is_weekend_day ORDER BY is_weekend_day) AS acc_by_weekpart
+		SUM(acc_by_day) OVER (PARTITION BY is_weekend_day ORDER BY is_weekend_day) AS Number_of_Accidents
 FROM temp1
 GROUP BY is_weekend_day,acc_by_day
 )
 SELECT  Weekpart, 
-		acc_by_weekpart AS Number_of_Accidents INTO acc_by_weekpart
+		Number_of_Accidents,
+		CAST(CAST(Number_of_Accidents*100 AS DECIMAL(10,2))/SUM(Number_of_Accidents) OVER () AS DECIMAL(10,2)) AS InPercent
+INTO acc_by_weekpart
 FROM temp2
-GROUP BY Weekpart,acc_by_weekpart;
+GROUP BY Weekpart,Number_of_Accidents;
 
 SELECT * 
 FROM acc_by_weekpart;
 /**/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
