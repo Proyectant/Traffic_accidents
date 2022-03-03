@@ -84,10 +84,29 @@ FROM acc_through_years;
 /**/
 
 
-
-SELECT DATENAME(weekday, Date_and_Time) AS Day, (CASE
+/*Number of accidents by part of week (weekday/weekend)*/
+WITH temp1 AS(
+SELECT DATENAME(weekday, Date_and_Time) AS Day, 
+	   (CASE
            WHEN (((DATEPART(DW,Date_and_Time ) - 1 ) + @@DATEFIRST ) % 7) IN (0,6)
            THEN 'Weekend'
            ELSE 'Weekday'
-       END) AS is_weekend_day
+       END) AS is_weekend_day,
+	   COUNT(ID) OVER (PARTITION BY DATENAME(weekday, Date_and_Time)) AS acc_by_day
 FROM accidents
+),
+temp2 AS(
+SELECT 
+		is_weekend_day AS Weekpart,
+		SUM(acc_by_day) OVER (PARTITION BY is_weekend_day ORDER BY is_weekend_day) AS acc_by_weekpart
+FROM temp1
+GROUP BY is_weekend_day,acc_by_day
+)
+SELECT  Weekpart, 
+		acc_by_weekpart AS Number_of_Accidents INTO acc_by_weekpart
+FROM temp2
+GROUP BY Weekpart,acc_by_weekpart;
+
+SELECT * 
+FROM acc_by_weekpart;
+/**/
