@@ -1,3 +1,9 @@
+CREATE DATABASE Traffic_Accidents;
+/*** IMPORT CSV FILE All_Accidents.csv INTO TABLE accidents ***/
+/*** MAKE COLUMN Date_and_Time type datetime and allow nulles on Longitude and Latitude columns ***/
+
+DROP DATABASE Traffic_Accidents
+
 /*Number of accidents by type*/
 SELECT  Type_of_Accidents, 
 		COUNT(ID) AS Number_of_Accidents INTO acc_by_type 
