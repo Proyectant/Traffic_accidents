@@ -13,7 +13,7 @@ GROUP BY Type_of_Accidents;
 SELECT * 
 FROM acc_by_type
 ORDER BY Number_of_Accidents DESC;
-/**/
+/*-------------------------------------------------*/
 
 /*Top 10 municipalities by number of accidents*/
 SELECT  TOP 10 Municipality, 
@@ -25,7 +25,7 @@ ORDER BY Number_of_Accidents DESC;
 SELECT * 
 FROM acc_by_municipality
 ORDER BY Number_of_Accidents DESC;
-/**/
+/*-------------------------------------------------*/
 
 /*Number of accidents by participants*/
 SELECT  Participants, 
@@ -36,7 +36,7 @@ GROUP BY Participants;
 SELECT *
 FROM acc_by_participants
 ORDER BY Number_of_Accidents DESC;
-/**/
+/*-------------------------------------------------*/
 
 /*Number of accidents by month*/
 SELECT  DATENAME(month, Date_and_Time) AS Month , 
@@ -46,7 +46,7 @@ GROUP BY DATENAME(month, Date_and_Time)
 
 SELECT * FROM acc_by_month
 ORDER BY Number_of_Accidents DESC
-/**/
+/*-------------------------------------------------*/
 
 /*Number of accidents by day*/
 SELECT  DATENAME(weekday, Date_and_Time) AS Day , 
@@ -58,7 +58,7 @@ GROUP BY DATENAME(weekday, Date_and_Time);
 SELECT *
 FROM acc_by_day
 ORDER BY Number_of_Accidents  DESC;
-/**/
+/*-------------------------------------------------*/
 
 
 /*Increase/Decrease of number of accidents through years*/
@@ -81,7 +81,7 @@ FROM temp;
 
 SELECT *
 FROM acc_through_years;
-/**/
+/*-------------------------------------------------*/
 
 
 /*Number of accidents by part of week (weekday/weekend)*/
@@ -111,20 +111,63 @@ GROUP BY Weekpart,Number_of_Accidents;
 
 SELECT * 
 FROM acc_by_weekpart;
-/**/
+/*-------------------------------------------------*/
 
 
 
+/* Increase/Decrease of number of accidents by type through years*/
+WITH temp AS
+(
+SELECT  DATENAME(year, Date_and_Time) as Year, 
+		Type_of_Accidents,
+		COUNT(ID) Number_of_accidents, 
+		LAG(COUNT(ID)) OVER ( ORDER BY Type_of_Accidents, DATENAME(year, Date_and_Time) ) AS Acc_from_last_year,
+		COUNT(ID) - LAG(COUNT(ID)) OVER ( ORDER BY Type_of_Accidents, DATENAME(year, Date_and_Time) ) AS Difference,
+		(COUNT(ID)*100)/LAG(COUNT(ID)) OVER ( ORDER BY Type_of_Accidents, DATENAME(year, Date_and_Time) ) AS InPercent
+FROM accidents
+WHERE Type_of_Accidents = 'With material damage'
+GROUP BY  Type_of_Accidents, DATENAME(year, Date_and_Time)
+),
+temp2 AS
+(
+SELECT  DATENAME(year, Date_and_Time) as Year, 
+		Type_of_Accidents,
+		COUNT(ID) Number_of_accidents, 
+		LAG(COUNT(ID)) OVER ( ORDER BY Type_of_Accidents, DATENAME(year, Date_and_Time) ) AS Acc_from_last_year,
+		COUNT(ID) - LAG(COUNT(ID)) OVER ( ORDER BY Type_of_Accidents, DATENAME(year, Date_and_Time) ) AS Difference,
+		(COUNT(ID)*100)/LAG(COUNT(ID)) OVER ( ORDER BY Type_of_Accidents, DATENAME(year, Date_and_Time) ) AS InPercent
+FROM accidents
+WHERE Type_of_Accidents = 'With injuries'
+GROUP BY  Type_of_Accidents, DATENAME(year, Date_and_Time)
+),
+temp3 AS
+(
+SELECT  DATENAME(year, Date_and_Time) as Year, 
+		Type_of_Accidents,
+		COUNT(ID) Number_of_accidents, 
+		LAG(COUNT(ID)) OVER ( ORDER BY Type_of_Accidents, DATENAME(year, Date_and_Time) ) AS Acc_from_last_year,
+		COUNT(ID) - LAG(COUNT(ID)) OVER ( ORDER BY Type_of_Accidents, DATENAME(year, Date_and_Time) ) AS Difference,
+		(COUNT(ID)*100)/LAG(COUNT(ID)) OVER ( ORDER BY Type_of_Accidents, DATENAME(year, Date_and_Time) ) AS InPercent
+FROM accidents
+WHERE Type_of_Accidents = 'With death'
+GROUP BY  Type_of_Accidents, DATENAME(year, Date_and_Time)
+)
+SELECT temp.Year, 
+		temp.Type_of_Accidents AS WithDamage, 
+		temp.Number_of_accidents AS Number_of_accidents_damage, 
+		CAST(CAST(temp.Difference*100 AS DECIMAL(10,2))/temp.Acc_from_last_year AS DECIMAL(10,2)) AS InPercentDamage, 
+		temp2.Type_of_Accidents AS WithInjuries, 
+		temp2.Number_of_accidents AS Number_of_accidents_injuries,
+		CAST(CAST(temp2.Difference*100 AS DECIMAL(10,2))/temp2.Acc_from_last_year AS DECIMAL(10,2)) AS InPercentInjuries, 
+		temp3.Type_of_Accidents AS WithDeath, 
+		temp3.Number_of_accidents AS Number_of_accidents_death,
+		CAST(CAST(temp3.Difference*100 AS DECIMAL(10,2))/temp3.Acc_from_last_year AS DECIMAL(10,2)) AS InPercentDeath
+INTO acc_by_type_through_years
+FROM temp
+INNER JOIN temp2 ON temp.Year=temp2.Year
+INNER JOIN temp3 ON temp.Year=temp3.Year
+ORDER BY temp.Year;
 
-
-
-
-
-
-
-
-
-
-
-
-
+SELECT * 
+FROM acc_by_type_through_years;
+/*-------------------------------------------------*/
