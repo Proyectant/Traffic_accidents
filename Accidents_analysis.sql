@@ -171,3 +171,53 @@ ORDER BY temp.Year;
 SELECT * 
 FROM acc_by_type_through_years;
 /*-------------------------------------------------*/
+
+
+/* Accidents by Season and Months*/
+SELECT  DATENAME(month, Date_and_Time) AS Month, 
+		CASE  
+		WHEN (DATEPART(m,Date_and_Time)=1 OR DATEPART(m,Date_and_Time)=12 OR DATEPART(m,Date_and_Time)=2) THEN 'Winter'
+		WHEN (DATEPART(m,Date_and_Time)=3 OR DATEPART(m,Date_and_Time)=4 OR DATEPART(m,Date_and_Time)=5) THEN 'Spring'
+		WHEN (DATEPART(m,Date_and_Time)=6 OR DATEPART(m,Date_and_Time)=7 OR DATEPART(m,Date_and_Time)=8) THEN 'Summer'
+		ELSE 'Autumn'
+		END AS Season,
+		COUNT(ID) AS Number_of_accidents
+INTO acc_by_season_and_month
+FROM accidents
+GROUP BY  DATENAME(month, Date_and_Time),DATEPART(m, Date_and_Time);
+
+SELECT *
+FROM acc_by_season_and_month;
+
+/*-------------------------------------------------*/
+
+
+/*Number of accidents by part of day*/
+WITH temp AS (
+SELECT CASE  
+		WHEN (DATEPART(hh,Date_and_Time)<=6) THEN 'Night'
+		WHEN (DATEPART(hh,Date_and_Time)>=6 AND DATEPART(hh,Date_and_Time)<12) THEN 'Morning'
+		WHEN (DATEPART(hh,Date_and_Time)>=12 AND DATEPART(hh,Date_and_Time)<18) THEN 'Afternoon'
+		ELSE 'Evening'
+		END AS Part_of_day,
+		COUNT(ID) AS Number_of_Accidents
+FROM accidents
+GROUP BY DATEPART(hh,Date_and_Time)),
+temp2 AS(
+SELECT Part_of_day,
+	   SUM(Number_of_Accidents) OVER (PARTITION BY Part_of_day) AS Number_of_accidents
+FROM temp
+GROUP BY Number_of_accidents,Part_of_day
+)
+SELECT  Part_of_day,
+		Number_of_accidents
+INTO acc_by_part_of_day
+FROM temp2
+GROUP BY Part_of_day, Number_of_accidents;
+
+
+SELECT *
+FROM acc_by_part_of_day
+ORDER BY Number_of_accidents DESC;
+/*-------------------------------------------------*/
+
