@@ -210,8 +210,9 @@ FROM temp
 GROUP BY Number_of_accidents,Part_of_day
 )
 SELECT  Part_of_day,
-		Number_of_accidents
-INTO acc_by_part_of_day
+		Number_of_accidents,
+		CAST(CAST(Number_of_accidents*100AS DECIMAL(10,2))/(SUM(Number_of_accidents) OVER ()) AS DECIMAL(10,2)) AS PercentOfTotal
+		INTO acc_by_part_of_day
 FROM temp2
 GROUP BY Part_of_day, Number_of_accidents;
 
